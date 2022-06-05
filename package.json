@@ -7,7 +7,11 @@
     "start": "node ./app.js",
     "dev": "nodemon ./app.js",
     "test": "newman run ./tests/api-tests.postman.json -e ./tests/env-api-tests.postman.json",
-    "stop": "lsof -ti :3000 | xargs kill"
+    "stop": "lsof -ti :3000 | xargs kill",
+    "docker:build": "docker-compose build",
+    "docker:start": "docker-compose up -d",
+    "docker:run": "docker-compose up -d --build",
+    "docker:stop": "docker-compose stop -f"
   },
   "license": "ISC",
   "dependencies": {
@@ -19,18 +23,15 @@
     "express-session": "1.13.0",
     "jsonwebtoken": "7.1.9",
     "method-override": "2.3.5",
-    "methods": "1.1.2",
-    "mongoose": "4.6.4",
-    "mongoose-unique-validator": "1.0.2",
+    "mongoose": "^6.3.5",
+    "mongoose-unique-validator": "^3.1.0",
     "morgan": "1.7.0",
     "passport": "0.3.2",
     "passport-local": "1.0.0",
-    "request": "2.69.0",
-    "slug": "0.9.1",
-    "underscore": "1.8.3"
+    "slug": "0.9.1"
   },
   "devDependencies": {
-    "newman": "^3.8.2",
-    "nodemon": "^1.11.0"
+    "newman": "^5.3.2",
+    "nodemon": "^2.0.16"
   }
 }

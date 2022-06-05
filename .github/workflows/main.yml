@@ -22,10 +22,6 @@ jobs:
         run: npm i -g pm2
       - name: Create env file
         run: |
-          touch .env
-          echo SECRET=$SECRET >> .env
-          echo NODE_ENV=production >> .env
-          echo MONGODB_URI=mongodb://kogda-virastu-mongodb:27017/kitchen >> .env
           pm2 deploy ecosystem.config.js production
         env:
           SSH_USERNAME: ${{secrets.SSH_USERNAME}}

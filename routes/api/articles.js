@@ -37,9 +37,9 @@ router.param('comment', (req, res, next, id) => {
 });
 
 router.get('/', auth.optional, (req, res, next) => {
-  const query = {};
-  const limit = 20;
-  const offset = 0;
+  let query = {};
+  let limit = 20;
+  let offset = 0;
 
   if (typeof req.query.limit !== 'undefined') {
     limit = req.query.limit;
@@ -78,9 +78,8 @@ router.get('/', auth.optional, (req, res, next) => {
           .limit(Number(limit))
           .skip(Number(offset))
           .sort({ createdAt: 'desc' })
-          .populate('author')
-          .exec(),
-        Article.count(query).exec(),
+          .populate('author'),
+        Article.count(query),
         req.payload ? User.findById(req.payload.id) : null,
       ]).then((results) => {
         const articles = results[0];
@@ -116,7 +115,6 @@ router.get('/feed', auth.required, (req, res, next) => {
       .limit(Number(limit))
       .skip(Number(offset))
       .populate('author')
-      .exec();
 
     return Promise.all([
       _articles,
@@ -158,7 +156,7 @@ router.post('/', auth.required, (req, res, next) => {
 router.get('/:article', auth.optional, (req, res, next) => {
   Promise.all([
     req.payload ? User.findById(req.payload.id) : null,
-    req.article.populate('author').execPopulate(),
+    req.article.populate('author')
   ])
     .then((results) => {
       const user = results[0];
@@ -263,7 +261,6 @@ router.get('/:article/comments', auth.optional, (req, res, next) => {
           },
         },
       })
-      .execPopulate()
       .then((article) => res.json({
         comments: req.article.comments.map((comment) => comment.toJSONFor(user)),
       })))

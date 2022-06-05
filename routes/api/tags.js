@@ -47,8 +47,6 @@ router.delete('/:tag/follow', auth.required, function (req, res, next) {
       if (!user) {
         return res.sendStatus(401);
       }
-      cons
-
       return user
         .unfollowTag(tag)
         .then(() => res.status(204).send());
@@ -58,7 +56,14 @@ router.delete('/:tag/follow', auth.required, function (req, res, next) {
 
 router.get('/top', async (req, res, next) => {
   try {
-    const tags = await Article.aggregate([{ $project: { tagList: 1 } }, { $unwind: '$tagList' }, { $group: { _id: '$tagList', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 20 }, { $project: { _id: 0, name: '$_id', count: 1 } }]).exec();
+    const tags = await Article.aggregate([
+      { $project: { tagList: 1 } }, 
+      { $unwind: '$tagList' }, 
+      { $group: { _id: '$tagList', count: { $sum: 1 } } }, 
+      { $sort: { count: -1 } }, 
+      { $limit: 20 }, 
+      { $project: { _id: 0, name: '$_id', count: 1 } 
+    }]).exec();
     return res.json({ tags });
   } catch (err) { return next(err); }
 });
