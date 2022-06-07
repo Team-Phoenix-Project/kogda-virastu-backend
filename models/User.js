@@ -3,6 +3,7 @@ const uniqueValidator = require('mongoose-unique-validator');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { secret } = require('../config');
+const { UserRoles } = require('./types');
 
 const UserSchema = new mongoose.Schema(
   {
@@ -13,6 +14,11 @@ const UserSchema = new mongoose.Schema(
       required: [true, "can't be blank"],
       match: [/^[a-zA-Z0-9]+$/, 'is invalid'],
       index: true,
+    },
+    roles: {
+      type: [String],
+      enum: UserRoles,
+      default: ['user'],
     },
     nickname: String,
     email: {
@@ -33,7 +39,7 @@ const UserSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Article',
-      default: []
+        default: [],
       },
     ],
     followingUsers: [
@@ -44,7 +50,7 @@ const UserSchema = new mongoose.Schema(
     ],
     followingTags: [
       {
-        type: String
+        type: String,
       },
     ],
     hash: String,
@@ -71,8 +77,8 @@ UserSchema.methods.setPassword = function (password) {
 };
 
 UserSchema.methods.generateJWT = function () {
-  const today = new Date(),
-    exp = new Date(today);
+  const today = new Date();
+  const exp = new Date(today);
 
   exp.setDate(today.getDate() + 60);
 
@@ -90,6 +96,7 @@ UserSchema.methods.toAuthJSON = function () {
   return {
     username: this.username,
     email: this.email,
+    roles: this.roles,
     token: this.generateJWT(),
     bio: this.bio,
     image: this.image,
@@ -104,7 +111,8 @@ UserSchema.methods.toProfileJSONFor = function (user) {
     bio: this.bio,
     image:
       this.image || 'https://static.productionready.io/images/smiley-cyrus.jpg',
-    following: user ? user.isFollowing(this._id) : false
+    following: user ? user.isFollowing(this._id) : false,
+    followingTags: user ? user.followingTags : null,
   };
 };
 
@@ -153,7 +161,6 @@ UserSchema.methods.unfollowTag = function (id) {
   return this.save();
 };
 
-
 UserSchema.methods.isFollowing = function (id) {
   return this.followingUsers.some(
     (followId) => followId.toString() === id.toString(),
@@ -162,6 +169,18 @@ UserSchema.methods.isFollowing = function (id) {
 
 UserSchema.methods.isFollowingTag = function (id) {
   return this.followingTags.includes(id);
+};
+
+UserSchema.methods.grantRole = function (role) {
+  return this.update({ $addToSet: { roles: role } });
+};
+
+UserSchema.methods.revokeRole = function (role) {
+  return this.update({ $pull: { roles: role } });
+};
+
+UserSchema.methods.setRoles = function (roles) {
+  return this.update({ roles });
 };
 
 mongoose.model('User', UserSchema);

@@ -59,7 +59,7 @@ router.get('/', auth.optional, (req, res, next) => {
       ? User.findOne({ username: req.query.favorited })
       : null,
   ])
-    .then((results) => {
+    .then(async (results) => {
       const author = results[0];
       const favoriter = results[1];
 
@@ -72,6 +72,9 @@ router.get('/', auth.optional, (req, res, next) => {
       } else if (req.query.favorited) {
         query._id = { $in: [] };
       }
+      // Filter own or published articles
+      const publishedOrOwnFilter = { $or: [{ state: 'published' }, { author: req?.payload?.id }] };
+      query = { $and: [query, publishedOrOwnFilter] };
 
       return Promise.all([
         Article.find(query)
@@ -81,6 +84,7 @@ router.get('/', auth.optional, (req, res, next) => {
           .populate('author'),
         Article.count(query),
         req.payload ? User.findById(req.payload.id) : null,
+      // eslint-disable-next-line no-shadow
       ]).then((results) => {
         const articles = results[0];
         const articlesCount = results[1];
@@ -114,11 +118,11 @@ router.get('/feed', auth.required, (req, res, next) => {
     const _articles = await Article.find({ $or: [{ author: { $in: user.followingUsers } }, { tagList: { $in: user.followingTags } }] })
       .limit(Number(limit))
       .skip(Number(offset))
-      .populate('author')
+      .populate('author');
 
     return Promise.all([
       _articles,
-      _articles.length
+      _articles.length,
     ])
       .then((results) => {
         const articles = results[0];
@@ -156,7 +160,7 @@ router.post('/', auth.required, (req, res, next) => {
 router.get('/:article', auth.optional, (req, res, next) => {
   Promise.all([
     req.payload ? User.findById(req.payload.id) : null,
-    req.article.populate('author')
+    req.article.populate('author'),
   ])
     .then((results) => {
       const user = results[0];
@@ -307,5 +311,4 @@ router.delete(
     }
   },
 );
-
 module.exports = router;
